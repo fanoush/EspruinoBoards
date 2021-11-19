@@ -34,6 +34,6 @@ With some soldering two more GPIO (A2,A3) are [easy to add for additional UART](
 Also it is quite easy to cut into black sides so that wires from inside can add row of two pins while metal case is on ![SWD pins mod](stlinkv2-1.jpg)
 
 #### See also
-https://hackaday.io/project/162597-st-link-clone-repurposing
-https://www.hobbiton.be/blog/repurpose-stlink/stlink2.svg
-https://stm32duinoforum.com/forum/images/thumb/a/ae/Bluepillpinout-gif/wiki_subdomain/700px-Bluepillpinout.gif
+- https://hackaday.io/project/162597-st-link-clone-repurposing
+- https://www.hobbiton.be/blog/repurpose-stlink/stlink2.svg
+- https://stm32duinoforum.com/forum/images/thumb/a/ae/Bluepillpinout-gif/wiki_subdomain/700px-Bluepillpinout.gif
