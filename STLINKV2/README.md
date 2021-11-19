@@ -3,8 +3,6 @@
 Typically they are based on STM32F103 (or clone) chips with 20KB RAM and 128KB flash
 
 Without modification there are 4 GPIOs available marked SWIM,RST,SWIO,SWCLK and there are also SWD pins on test points so easy to reprogram or use as two more GPIOs.
-With some soldering two more GPIO (A2,A3) are [easy to add for additional UART](https://github.com/RadioOperator/STM32F103C8T6_CMSIS-DAP_SWO/blob/master/Doc/STLINK_V2A_V2B/Schematic(part)%20STLINK_V2A_V2B.jpg).
-
 
 #### Pinout
 | Pin   | Description | Comments|
@@ -26,6 +24,12 @@ Also for CKS32 clone chip add `-c 'set CPUTAPID 0x2ba01477'` if it complains abo
 - unlock and erase flash `stm32f1x unlock 0`
 - program `reset halt; flash write_image erase espruino_2v10.216_stlink_v2.bin 0x08000000`
 - now disconnect and reconnect and  open https://www.espruino.com/ide/ -> connect ->'Web Serial'
+
+### Modding
+
+With some soldering two more GPIO (A2,A3) are [easy to add for additional UART](https://github.com/RadioOperator/STM32F103C8T6_CMSIS-DAP_SWO/blob/master/Doc/STLINK_V2A_V2B/Schematic(part)%20STLINK_V2A_V2B.jpg).
+
+Also it is quite easy to cut into black sides so that wires from inside can add row of two pins while metal case is on.
 
 #### See also
 https://hackaday.io/project/162597-st-link-clone-repurposing
