@@ -12,7 +12,7 @@ Without modification there are 4 GPIOs available marked SWIM,RST,SWIO,SWCLK and 
 | B13 |SWCLK| also tied to A5|
 | B14 |SWDIO| also tied to B12|
 | A9 | 1 or 2 LED(s) | if two then writing 1 or 0 lights up LEDs and for turning off let it float or set as input |
-| A13 |STM32 SWDIO on PCB| for reflashing via openocd, at runtime can be reconfigured as generic GPIO via `poke32(0x40010000+4,0x4<<24)`|
+| A13 |STM32 SWDIO on PCB| for reflashing via openocd, at runtime can be reconfigured as generic GPIO, swjcfg(4) in code.js|
 | A14 |STM32 SWDCLK on PCB| |
 
 #### Installation
