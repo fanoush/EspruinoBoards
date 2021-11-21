@@ -13,14 +13,14 @@ if (!global.LED1) {
 if (E.isUSBConnected && (!E.isUSBConnected())){
   if (LED1.blue) LED1.blue(); else analogWrite(LED1,0.5,{freq:5});
   if (global.Serial1) setTimeout(function(){
-    // wait 2s and enable uart console if USB is not connected
+    // wait 3s and enable uart console if USB is not connected
     if (LED1.red) LED1.red(); else analogWrite(LED1,0.5,{freq:20});
     if (!E.isUSBConnected()){
       Serial1.setup(115200,{rx:B7,tx:B6});
       Serial1.setConsole();
     }
     LED1.reset();
-  },2000);
+  },3000);
   else LED1.reset();
 }
 
@@ -35,6 +35,7 @@ function swjcfg(v){
   poke32(MAPR,o);
   poke32(MAPR,o|((v&7)<<24));
 }
+// swjcfg(4) // 4 off, 2 on
 
 // B6 RST/TX, B7 SWIM/RX, B13 SWCLK, B14 SWIO
 // for SPI use B6 MISO, B7 MOSI, B13 CLK, B14 CS
