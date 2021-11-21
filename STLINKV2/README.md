@@ -27,11 +27,14 @@ Also for CKS32 clone chip add `-c 'set CPUTAPID 0x2ba01477'` if it complains abo
 
 ### Modding
 
-#### UART2
-With some soldering two more GPIO (A2,A3) are [easy to add for additional UART](https://github.com/RadioOperator/STM32F103C8T6_CMSIS-DAP_SWO/blob/master/Doc/STLINK_V2A_V2B/Schematic(part)%20STLINK_V2A_V2B.jpg). When seeing the chip with dot in upper left corner and pin header on left and usb on right A2,A3 are two first corner pins in bottom left corner.
-
 #### SWD
-Also it is quite easy to cut into black sides so that wires from inside can add row of two pins while metal case is on ![SWD pins mod](stlinkv2-1.jpg)
+It is quite easy to cut into black sides so that wires from inside can go under metal case and add a row of two pins. This also gives you 2 more generic GIPOs.  ![SWD pins mod](stlinkv2-1.jpg)
+
+#### Pull ups on SWIM,RST
+Some (most?) dongles have 680ohm pull up resistor on SWIM pin. This may cause issues with UART communication as the voltage may not go low enough during communication, also it may possibly cause issues if you repurpose the pin for something else (SPI? I2C?). If you want you can find the resistor on the board and crush/scratch it off in the middle. Also some other dongles I have has 1K pull up resistors both on SWIM and RST. However this mod is not sctrictly needed if it works for you as is just fine.
+
+#### UART2
+With some soldering two more GPIO (A2,A3) could be added. When seeing the chip with dot in upper left corner and pin header on left and usb on right A2,A3 are two first corner pins in bottom left corner. Those pins are easier to solder to as they are not in the middle and also they support [additional UART](https://github.com/RadioOperator/STM32F103C8T6_CMSIS-DAP_SWO/blob/master/Doc/STLINK_V2A_V2B/Schematic(part)%20STLINK_V2A_V2B.jpg), hovever current binary build allows only UART1.
 
 #### See also
 - https://hackaday.io/project/162597-st-link-clone-repurposing
