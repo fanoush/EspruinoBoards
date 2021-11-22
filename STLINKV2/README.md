@@ -1,4 +1,4 @@
-### Espruino build for cheap chinese STLINK V2 clone dongles
+### Espruino build for cheap STLINK V2 clone dongles
 
 Typically they are based on STM32F103 (or clone) chips with 20KB RAM and 128KB flash
 
