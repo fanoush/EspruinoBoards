@@ -17,7 +17,7 @@ Without modification there are 4 GPIOs available marked SWIM,RST,SWIO,SWCLK and 
 
 #### Installation
 
-With two devices one can be used to reprogram the other via SWD. Often the chip model has only 64KB ram officially while 128KB works so flash size needs to be overrriden.
+With two devices one can be used to reprogram the other via SWD. Often the chip model has only 64KB flash officially while 128KB works so flash size needs to be overrriden.
 Also for CKS32 clone chip add `-c 'set CPUTAPID 0x2ba01477'` if it complains about wrong ID.
 
 - Connect `openocd -d2  -f interface/stlink-v2.cfg  -c "set FLASH_SIZE 131072" -f target/stm32f1x.cfg`
