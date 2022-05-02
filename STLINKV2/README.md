@@ -40,3 +40,7 @@ With some soldering two more GPIO (A2,A3) could be added. When seeing the chip w
 - https://hackaday.io/project/162597-st-link-clone-repurposing
 - https://www.hobbiton.be/blog/repurpose-stlink/stlink2.svg
 - https://stm32duinoforum.com/forum/images/thumb/a/ae/Bluepillpinout-gif/wiki_subdomain/700px-Bluepillpinout.gif
+
+### DAP103-STLINKv2.bin
+
+This is CMSIS-DAP build of https://github.com/devanlai/dap42 for stlink v2 dongle that has usb to serial enabled on RST/SWIM pins - using UART1 over B6,B7 pins. This is alternative debugger firmware for using it with OpenOCD, can be used to flash/debug/use second dongle with Espruino with console over RST/SWIM.
