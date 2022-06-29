@@ -34,7 +34,7 @@ It is quite easy to cut into black sides so that wires from inside can go under 
 Some (most?) dongles have 680ohm pull up resistor on SWIM pin. This may cause issues with UART communication as the voltage may not go low enough during communication, also it may possibly cause issues if you repurpose the pin for something else (SPI? I2C?). If you want you can find the resistor on the board and crush/scratch it off in the middle/desolder. Also some other dongles I have has 1K pull up resistors both on SWIM and RST. However this mod is not sctrictly needed if it works for you as is just fine. For more details see images folder but yours may be different, better verify with multimeter.
 
 #### UART2
-With some soldering two more GPIO (A2,A3) could be added. When seeing the chip with dot in upper left corner and pin header on left and usb on right A2,A3 are two first corner pins in bottom left corner. Those pins are easier to solder to as they are not in the middle and also they support [additional UART](https://github.com/RadioOperator/STM32F103C8T6_CMSIS-DAP_SWO/blob/master/Doc/STLINK_V2A_V2B/Schematic(part)%20STLINK_V2A_V2B.jpg), hovever current binary build allows only UART1.
+With some soldering two more GPIO (A2,A3) could be added. When seeing the chip with dot in upper left corner and pin header on left and usb on right A2,A3 are two first corner pins in bottom left corner. Those pins are easier to solder to as they are not in the middle and also they support [additional UART](https://github.com/RadioOperator/STM32F103C8T6_CMSIS-DAP_SWO/blob/master/Doc/STLINK_V2A_V2B/Schematic(part)%20STLINK_V2A_V2B.jpg).
 
 #### See also
 - https://hackaday.io/project/162597-st-link-clone-repurposing
@@ -43,4 +43,4 @@ With some soldering two more GPIO (A2,A3) could be added. When seeing the chip w
 
 ### DAP103-STLINKv2.bin
 
-This is CMSIS-DAP build of https://github.com/devanlai/dap42 for stlink v2 dongle that has usb to serial enabled on RST/SWIM pins - using UART1 over B6,B7 pins. This is alternative debugger firmware for using it with OpenOCD, can be used to flash/debug/use second dongle with Espruino with console over RST/SWIM.
+This is CMSIS-DAP build of https://github.com/devanlai/dap42 for stlink v2 dongle that has usb to serial enabled on RST/SWIM pins - using UART1 over B6,B7 pins. This is alternative debugger firmware for using with OpenOCD (`-f interface/cmsis-dap.cfg `). It can be used to flash/debug/use second dongle with Espruino with console over RST/SWIM. Also can be used with various nrf52 devboards and can even unlock them when they are protected (unlike stlink).
