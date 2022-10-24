@@ -18,8 +18,20 @@ const DP_RESEND = 0x08; // R
 const DP_SELECT = 0x08; // W
 const DP_RDBUFF = 0x0c; // R
 
-var SWDCLK = B13;
-var SWDIO = B14;
+
+var SWDCLK;// = B13;
+var SWDIO;// = B14;
+var swdSPI;
+function swd_setup(clkPin, dioPin)
+{
+  SWDCLK=clkPin;
+  SWDIO=dioPin;
+  swdSPI=new SPI();
+  swdSPI.setup({sck:SWDCLK,miso:SWDIO,order:"msb",mode:2,bits:8});
+  //pinMode(SWDCLK, OUTPUT);
+  digitalWrite(SWDCLK,1);
+  swd_mode(0);
+}
 
 var parity32;
 var swdreq;
@@ -66,17 +78,6 @@ uint32_t rbitswap(uint32_t x)
 `);
 */
 
-var swdSPI;
-function swd_setup(clkPin, dioPin)
-{
-  SWDCLK=clkPin;
-  SWDIO=dioPin;
-  swdSPI=new SPI();
-  swdSPI.setup({sck:SWDCLK,miso:SWDIO,order:"msb",mode:2,bits:8});
-  //pinMode(SWDCLK, OUTPUT);
-  digitalWrite(SWDCLK,1);
-  swd_mode(0);
-}
 
 
 var is_connected=false;
@@ -89,17 +90,14 @@ function nrf_begin()
   { //if core id is readable the connection is working
     dap_power_on();
     is_connected = true;
-    //nrf_ufcr.connected = 1;
     if (nrf_read_lock_state())
     { //nRF is unlocked so we can talk to the debugging interface
       //nrf_read_ficr();
-      //nrf_ufcr.connected = 2;
     }
   }
   else
   {
     is_connected = false;
-    //nrf_ufcr.connected = 0;
   }
   return idcode;
 }
@@ -117,7 +115,7 @@ const AP_NRF_APPROTECTSTATUS = 0x0c;
 function nrf_read_lock_state()
 {
   dap_select(1);
-  var temp = dap_read(1, AP_NRF_APPROTECTSTATUS);
+  var temp = dap_read(AP_NRF_APPROTECTSTATUS);
   dap_select(0);
   return temp & 1;
 }
@@ -164,7 +162,7 @@ function dap_poweroff(){
 function dap_poweron()
 {
   DP_Write(DP_ABORT, 0x1e);
-  DP_Write(DP_CTRLSTAT, 0x50000000); // powerup system and power domain
+  DP_Write(DP_CTRLSTAT, 0x50000000); // powerup system and debug domain
   var retries=3; while(retries--) if (DP_Read(DP_CTRLSTAT)>>>28 == 0xF) break;
   if (retries<1) return false;
   dap_write(AP_CSW, 0x23000002); // 32 bit read, no increment
@@ -174,13 +172,13 @@ function dap_poweron()
 function readmem(addr,len,size, buff){
   if(!buff||buff.length!=len) buff=Uint32Array(len);
   if(!size) size=4;
-  if(size==4) dap_write(AP_CSW, 0x23000012);
-  else if (size==2)dap_write(AP_CSW, 0x23000011);
-  else if (size==1)dap_write(AP_CSW, 0x23000010);
+  if(size==4) dap_write(AP_CSW, 0x23000012); //32bit with increment
+  else if (size==2)dap_write(AP_CSW, 0x23000011); //16bit TAR increment
+  else if (size==1)dap_write(AP_CSW, 0x23000010); //8bit TAR increment
   else return null;
   if (len<1) return null;
   if (!AP_Write(AP_TAR, addr)) return null;
-  AP_Read(AP_DRW);//len--;
+  AP_Read(AP_DRW);//AP reads are delayed by one
   var val;var idx=0;
   while(--len>0){
     val=AP_Read(AP_DRW);
@@ -188,7 +186,7 @@ function readmem(addr,len,size, buff){
     buff[idx++]=val;
     if(!muted) print("0x"+addr.toString(16)+": "+val.toString(16));addr+=size;
   }
-  val=DP_Read(DP_RDBUFF);buff[idx]=val;
+  val=DP_Read(DP_RDBUFF);buff[idx]=val; // last delayed value
   if(!muted) print("0x"+addr.toString(16)+": "+val.toString(16));
   return buff;
 }
@@ -197,7 +195,7 @@ function readmem32(address)
 {
   var val = 0;
   if (!dap_write(AP_TAR, address)) return null;
-  AP_Read(AP_DRW);
+  AP_Read(AP_DRW); // schedule read
   val=DP_Read(DP_RDBUFF);
   if (muted) return val;
   print("Read memory: 0x"+address.toString(16)+" : 0x"+val.toString(16));
@@ -218,6 +216,7 @@ function writemem32(address, value)
 
 function swd_init(jtag2swd)
 { //Returns the ID
+  if(!(SWDCLK && SWDIO)) {print("setup pins via swd_setup(clkPin,dioPin)!");return null;}
   if (jtag2swd){
     swd_write(0xffffffff, 32);
     swd_write(0xffffffff, 32);
