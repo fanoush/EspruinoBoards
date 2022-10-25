@@ -22,14 +22,16 @@ const DP_RDBUFF = 0x0c; // R
 var SWDCLK;// = B13;
 var SWDIO;// = B14;
 var swdSPI;
+var swdShiftOut;
 function swd_setup(clkPin, dioPin)
 {
   SWDCLK=clkPin;
   SWDIO=dioPin;
+  swdShiftOut=shiftOut.bind(null,SWDIO,{clk:SWDCLK,repeat:8});
   swdSPI=new SPI();
   swdSPI.setup({sck:SWDCLK,miso:SWDIO,order:"msb",mode:2,bits:8});
   //pinMode(SWDCLK, OUTPUT);
-  digitalWrite(SWDCLK,1);
+  SWDCLK.set();
   swd_mode(0);
 }
 
@@ -182,12 +184,12 @@ function readmem(addr,len,size, buff){
   var val;var idx=0;
   while(--len>0){
     val=AP_Read(AP_DRW);
-    if(swdACK!=1)return dap_handle_fault();
+    if(swdACK!=1) return dap_handle_fault();
     buff[idx++]=val;
-    if(!muted) print("0x"+addr.toString(16)+": "+val.toString(16));addr+=size;
+    //if(!muted) print("0x"+addr.toString(16)+": "+val.toString(16));addr+=size;
   }
   val=DP_Read(DP_RDBUFF);buff[idx]=val; // last delayed value
-  if(!muted) print("0x"+addr.toString(16)+": "+val.toString(16));
+  //if(!muted) print("0x"+addr.toString(16)+": "+val.toString(16));
   return buff;
 }
 
@@ -231,15 +233,14 @@ function swd_init(jtag2swd)
 
 function AP_Write(regAddr, data)
 {
-  var retry = 15;
-  while (retry--)
-  {
+  var retry = 5;
+  do {
     var res = swd_tran(1, 0, regAddr, data);
     if (res != null)
       return true;
     if (swdACK!=2) return null; // don't retry if not WAIT
     if (!muted) print("AP_Write retrying");
-  }
+  } while (retry--);
   DP_Write(DP_ABORT,1);//still waiting, abort
   return false;
 }
@@ -248,15 +249,14 @@ function AP_Write(regAddr, data)
 // AP reads are 'posted' = real data is in next AP read or DP RDBUFF read
 function AP_Read(regAddr)
 {
-  var retry = 15;
-  while (retry--)
-  {
+  var retry = 5;
+  do {
     var data = swd_tran(1,1,regAddr);
     if (data != null)
       return data;
     if (swdACK!=2) return null; // don't retry if not WAIT
     if (!muted) print("AP_Read","0x"+regAddr.toString(16),"retrying");
-  }
+  } while (retry--);
   DP_Write(DP_ABORT,1);//still waiting, abort
   return null;
 }
@@ -265,15 +265,14 @@ function AP_Read(regAddr)
 // write DP register
 function DP_Write(regAddr, data)
 {
-  var retry = 15;
-  while (retry--)
-  {
+  var retry = 5;
+  do {
     var res = swd_tran(0,0,regAddr,data);
     if (res != null)
       return true;
     if (swdACK!=2) return null; // don't retry if not WAIT
     if (!muted) print("DP_Write retrying");
-  }
+  } while (retry--);
   DP_Write(DP_ABORT,1);//still waiting, abort
   return false;
 }
@@ -281,15 +280,14 @@ function DP_Write(regAddr, data)
 // read DP register
 function DP_Read(regAddr)
 {
-  var retry = 15;
-  while (retry--)
-  {
+  var retry = 5;
+  do {
     var data = swd_tran(0,1,regAddr);
     if (data != null)
       return data;
     if (swdACK!=2) return null; // don't retry if not WAIT
     if (!muted) print("DP_Read","0x"+regAddr.toString(16),"retrying");
-  }
+  } while (retry--);
   DP_Write(DP_ABORT,1);//still waiting, abort
   return null;
 }
@@ -311,7 +309,7 @@ function swd_tran(APorDP, RorW,regAddr,u32data)
       {
         swd_write(0, 1);
         return u32data;
-      }else print("got data 0x"+u32data.toString(16));
+      }else print("bad parity for 0x"+u32data.toString(16));
     }
     else
     { // Writing 32 bits to SWD
@@ -321,22 +319,9 @@ function swd_tran(APorDP, RorW,regAddr,u32data)
       return true;
     }
   }
-  swd_write(0, 32);//If Overrun Detection is enabled then a data phase is required on FAULT or WAIT
+  //swd_write(0, 32);//If Overrun Detection is enabled then a data phase is required on FAULT or WAIT
   return null;
 }
-
-
-/*
-function parity32(uint32)
-{
-  uint32 = (uint32 & 0xFFFF) ^ (uint32 >>> 16);
-  uint32 = (uint32 & 0xFF) ^ (uint32 >> 8);
-  uint32 = (uint32 & 0xF) ^ (uint32 >> 4);
-  uint32 = (uint32 & 0x3) ^ (uint32 >> 2);
-  uint32 = (uint32 & 0x1) ^ (uint32 >> 1);
-  return uint32;
-}
-*/
 
 var swdMode; // SWDIO pin mode, 1 = Write 0 = Read
 const OUTPUT = "output";
@@ -348,16 +333,15 @@ const LOW = 0;
 function swd_write(data, bits)
 {
   if (swdMode != 1) swd_mode(1);
-  if (bits==8) shiftOut(SWDIO,{clk:SWDCLK,repeat:8},[data]);
-  else if (bits==32) shiftOut(SWDIO,{clk:SWDCLK,repeat:8},[data,data>>8,data>>16,data>>>24]);
+  if (bits==8) return swdShiftOut([data]);
+  else if (bits==32) return swdShiftOut([data,data>>8,data>>16,data>>>24]);
   else while (bits--)
   {
     digitalWrite(SWDIO, data & 1);
-    //digitalPulse(SWDCLK,1,1);
-    digitalWrite(SWDCLK, LOW);
+    SWDCLK.reset();
     //delayus(2);
-    digitalWrite(SWDCLK, HIGH);
     data >>>= 1;
+    SWDCLK.set();
     //delayus(2);
   }
 }
@@ -365,20 +349,24 @@ function swd_write(data, bits)
 // read bits in LSB order
 function swd_read(bits)
 {
-  var data = 0;
-  var input_bit = 1;
   if (swdMode != 0) swd_mode(0);
-  if (bits==32 && swdSPI){var a=swdSPI.send(Uint8Array(4));data=rbitswap(Uint32Array(a.buffer)[0]);} else
+  if (bits==32 && swdSPI){
+    var a=swdSPI.send(Uint8Array(4));
+    return rbitswap(Uint32Array(a.buffer)[0])>>>0;
+  }
+  var data = 0;
+  var bit = 1;
+  var clk=SWDCLK.write.bind(SWDCLK);
   while (bits--)
   {
-    if (digitalRead(SWDIO))
+    if (SWDIO.read())
     {
-      data |= input_bit;
+      data |= bit;
     }
-    digitalWrite(SWDCLK, LOW);
+    clk(0);
     //delayus(2);
-    input_bit <<= 1;
-    digitalWrite(SWDCLK, HIGH);
+    bit <<= 1;
+    clk(1);
     //delayus(2);
   }
   return data>>>0; //make unsigned
@@ -392,9 +380,9 @@ function swd_mode(WorR)
     //digitalWrite(SWDIO, HIGH); // help with pull up
     pinMode(SWDIO, INPUT_PULLUP);
   }
-  digitalWrite(SWDCLK, LOW);
+  SWDCLK.reset();
   //delayus(2);
-  digitalWrite(SWDCLK, HIGH);
+  SWDCLK.set();
   //delayus(2);
   if (WorR)
     pinMode(SWDIO, OUTPUT);
