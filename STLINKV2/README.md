@@ -28,7 +28,7 @@ Also for CKS32 clone chip add `-c 'set CPUTAPID 0x2ba01477'` if it complains abo
 ### Modding
 
 #### SWD
-It is quite easy to cut into black plastic sides so that wires from inside can go under metal case and add a row of two pins. You can solder wires to STM32 SWD pins like that which also gives you easy way to reflash it and also gives you 2 more generic GIPOs as the SWD functionality can be turned off at runtime.  ![SWD breakout](images/stlinkv2-swd-wires.jpg) ![SWD pins mod](stlinkv2-1.jpg) 
+It is quite easy to cut into black plastic sides so that wires from inside can go under metal case and add a row of two pins (even on both sides). You can solder wires to STM32 SWD pins like that which also gives you easy way to reflash it and also gives you 2 more generic GPIOs as the SWD functionality can be turned off at runtime.  ![SWD breakout](images/stlinkv2-swd-wires.jpg) ![SWD pins mod](stlinkv2-1.jpg) 
 
 #### Pull ups on SWIM,RST
 Some (most?) dongles have 680ohm pull up resistor on SWIM pin. This may cause issues with UART communication as the voltage may not go low enough during communication, also it may possibly cause issues if you repurpose the pin for something else (SPI? I2C?). If you want you can find the resistor on the board and crush/scratch it off in the middle/desolder. Also some other dongles I have has 1K pull up resistors both on SWIM and RST. However this mod is not sctrictly needed if it works for you as is just fine. For more details see images folder but yours may be different, better verify with multimeter.
