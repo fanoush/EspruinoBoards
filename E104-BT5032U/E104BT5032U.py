@@ -38,8 +38,8 @@ info = {
 #     'NEOPIXEL'
    ],
    'makefile' : [
-#     'DEFINES +=-DCONFIG_GPIO_AS_PINRESET', # Allow the reset pin to work
-     'DEFINES += -DCONFIG_NFCT_PINS_AS_GPIOS', # Allow the reset pin to work
+# use reset button as BTN2     'DEFINES +=-DCONFIG_GPIO_AS_PINRESET', # Allow the reset pin to work
+     'DEFINES += -DCONFIG_NFCT_PINS_AS_GPIOS', # NFC pins as GPIOs
      'ESPR_BLUETOOTH_ANCS=1', # Enable ANCS (Apple notifications) support
      'DEFINES += -DESPR_LSE_ENABLE', # Ensure low speed external osc enabled
      'DEFINES += -DESPR_DCDC_ENABLE=1', # Use DC/DC converter
@@ -48,16 +48,21 @@ info = {
      'DEFINES+=-DBLUETOOTH_ADVERTISING_INTERVAL=200',
      'DEFINES +=-DBLUETOOTH_NAME_PREFIX=\'"BT5032U"\'',
      'DEFINES += -DNRF_BLE_GATT_MAX_MTU_SIZE=53 -DNRF_BLE_MAX_MTU_SIZE=53', # increase MTU from default of 23
-     'DEFINES += -DCENTRAL_LINK_COUNT=2 -DNRF_SDH_BLE_CENTRAL_LINK_COUNT=2', # allow two outgoing connections at once     
-     'LDFLAGS += -Xlinker --defsym=LD_APP_RAM_BASE=0x3290', # set RAM base to match MTU=53 + CENTRAL_LINK_COUNT=2             
+     'DEFINES += -DCENTRAL_LINK_COUNT=2 -DNRF_SDH_BLE_CENTRAL_LINK_COUNT=2', # allow two outgoing connections at once
+     'LDFLAGS += -Xlinker --defsym=LD_APP_RAM_BASE=0x3290', # set RAM base to match MTU=53 + CENTRAL_LINK_COUNT=2
      'DFU_PRIVATE_KEY=targets/nrf5x_dfu/dfu_private_key.pem',
      'DFU_SETTINGS=--application-version 0xff --hw-version 52 --sd-req 0x8C,0x91',
+     'NRF_BL_DFU_INSECURE=1',
+     'LINKER_BOOTLOADER=targetlibs/nrf5x_12/nrf5x_linkers/banglejs_dfu.ld', # bootloader at 0x7a000
    ]
  }
 };
 
-storage_pages = 26
+storage_pages = 28
 fds_pages = 2
+bootloader_page = 0x7a
+bootloader_pages = 0x80-0x7a
+
 chip = {
   'part' : "NRF52832",
   'family' : "NRF52",
@@ -71,15 +76,16 @@ chip = {
   'adc' : 1,
   'dac' : 0,
   'saved_code' : {
-    'address' : ((0x78 - fds_pages - storage_pages) * 4096), # Bootloader takes pages 120-127, FS takes 118-119
+    'address' : ((bootloader_page - fds_pages - storage_pages) * 4096),
     'page_size' : 4096,
     'pages' : storage_pages,
-    'flash_available' : 512 - ((31 + 8 + fds_pages + storage_pages)*4) # Softdevice uses 31 pages of flash, bootloader 8, FS 2, code 10. Each page is 4 kb.
+    'flash_available' : 512 - ((0x1F + bootloader_pages + fds_pages + storage_pages)*4)
   },
 };
 
 devices = {
   'BTN1' : { 'pin' : 'D11', 'pinstate' : 'IN_PULLDOWN' }, # Pin negated in software
+  'BTN2' : { 'pin' : 'D21', 'pinstate' : 'IN_PULLDOWN', 'no_bootloader':True  }, # Pin negated in software
   'LED1' : { 'pin' : 'D13' }, # Pin negated in software
   'RX_PIN_NUMBER' : { 'pin' : 'D8'},
   'TX_PIN_NUMBER' : { 'pin' : 'D6'},
@@ -116,6 +122,7 @@ def get_pins():
   pinutils.findpin(pins, "PD31", True)["functions"]["ADC1_IN7"]=0;
   # Make buttons and LEDs negated
   pinutils.findpin(pins, "PD11", True)["functions"]["NEGATED"]=0;
+  pinutils.findpin(pins, "PD21", True)["functions"]["NEGATED"]=0;
   pinutils.findpin(pins, "PD13", True)["functions"]["NEGATED"]=0;
 
   # everything is non-5v tolerant
